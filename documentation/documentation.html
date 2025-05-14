@@ -1,0 +1,2298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acoustic Fingerprint Studio</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    
+    <!-- Three.js for 3D visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+    <!-- WaveSurfer.js -->
+    <script src="https://unpkg.com/wavesurfer.js@7"></script>
+
+    <!-- Custom configuration for Tailwind -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                            950: '#2e1065'
+                        },
+                        secondary: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            300: '#5eead4',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                            950: '#042f2e'
+                        },
+                        accent: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            200: '#fed7aa',
+                            300: '#fdba74',
+                            400: '#fb923c',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                            800: '#9a3412',
+                            900: '#7c2d12',
+                            950: '#431407'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite'
+                    },
+                    boxShadow: {
+                        'glow': '0 0 15px rgba(139, 92, 246, 0.5)',
+                        'glow-lg': '0 0 25px rgba(139, 92, 246, 0.5)'
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.5);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(139, 92, 246, 0.7);
+        }
+        
+        .dark ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Waveform animations */
+        .audio-wave {
+            width: 3px;
+            height: 100%;
+            margin: 0 2px;
+            border-radius: 2px;
+            animation: wave 1s infinite ease-in-out;
+        }
+        
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.3); }
+            50% { transform: scaleY(1); }
+        }
+        
+        .audio-waves .audio-wave:nth-child(2) { animation-delay: 0.1s; }
+        .audio-waves .audio-wave:nth-child(3) { animation-delay: 0.2s; }
+        .audio-waves .audio-wave:nth-child(4) { animation-delay: 0.3s; }
+        .audio-waves .audio-wave:nth-child(5) { animation-delay: 0.4s; }
+        .audio-waves .audio-wave:nth-child(6) { animation-delay: 0.5s; }
+        .audio-waves .audio-wave:nth-child(7) { animation-delay: 0.6s; }
+        .audio-waves .audio-wave:nth-child(8) { animation-delay: 0.7s; }
+        
+        /* Gradient animations */
+        .gradient-bg {
+            background: linear-gradient(-45deg, #6d28d9, #14b8a6, #6d28d9, #f97316);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Data flow animation */
+        .data-flow {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .data-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: rgba(139, 92, 246, 0.8);
+            border-radius: 50%;
+            filter: blur(2px);
+            opacity: 0;
+            animation: flowParticle 3s linear infinite;
+        }
+        
+        @keyframes flowParticle {
+            0% { 
+                left: 0;
+                top: 50%;
+                transform: translate(0, -50%);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { 
+                left: 100%;
+                top: 50%;
+                transform: translate(0, -50%);
+                opacity: 0;
+            }
+        }
+        
+        .data-flow .data-particle:nth-child(2) { animation-delay: 0.5s; }
+        .data-flow .data-particle:nth-child(3) { animation-delay: 1s; }
+        .data-flow .data-particle:nth-child(4) { animation-delay: 1.5s; }
+        .data-flow .data-particle:nth-child(5) { animation-delay: 2s; }
+
+        /* 3D card effect */
+        .card-3d {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            perspective: 1000px;
+        }
+
+        .card-3d:hover {
+            transform: translateY(-5px) rotateX(2deg) rotateY(2deg);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark .card-3d:hover {
+            box-shadow: 0 10px 25px -5px rgba(20, 184, 166, 0.1), 0 8px 10px -6px rgba(20, 184, 166, 0.1);
+        }
+        
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            background-color: rgba(15, 23, 42, 0.9);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px 12px;
+            position: absolute;
+            z-index: 50;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+            width: max-content;
+            max-width: 250px;
+            font-size: 0.875rem;
+            pointer-events: none;
+        }
+        
+        .tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(15, 23, 42, 0.9) transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Canvas styling */
+        canvas {
+            image-rendering: pixelated;
+        }
+
+        /* Special progress bar */
+        .progress-ring {
+            position: relative;
+            width: 60px;
+            height: 60px;
+        }
+
+        .progress-ring__circle {
+            transform: rotate(-90deg);
+            transform-origin: center;
+            stroke-dasharray: 283;
+            transition: stroke-dashoffset 0.3s ease;
+        }
+
+        .progress-ring__text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        /* Audio visualization waves */
+        .audio-vis-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            height: 60px;
+        }
+
+        .audio-vis-bar {
+            width: 3px;
+            border-radius: 2px;
+            background: rgba(139, 92, 246, 0.8);
+            transform: scaleY(0.1);
+            transform-origin: bottom;
+            transition: transform 0.1s ease;
+        }
+
+        /* Waveform overrides */
+        #waveform {
+            --progress-color: rgba(139, 92, 246, 0.8);
+            --cursor-color: rgba(139, 92, 246, 0.8);
+            --cursor-width: 2px;
+            --bar-color: rgba(139, 92, 246, 0.3);
+            --bar-width: 2px;
+            --bar-gap: 1px;
+        }
+
+        .dark #waveform {
+            --progress-color: rgba(139, 92, 246, 0.8);
+            --cursor-color: rgba(139, 92, 246, 0.8);
+            --cursor-width: 2px;
+            --bar-color: rgba(139, 92, 246, 0.3);
+            --bar-width: 2px;
+            --bar-gap: 1px;
+        }
+
+        /* Range input styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            background: rgba(139, 92, 246, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: rgb(139, 92, 246);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+
+        /* Spectrogram view styles */
+        .spectrogram-container {
+            position: relative;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .spectrogram-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .spectrogram-cursor {
+            position: absolute;
+            width: 2px;
+            background-color: rgba(255, 255, 255, 0.8);
+            top: 0;
+            bottom: 0;
+            display: none;
+            pointer-events: none;
+            z-index: 12;
+        }
+
+        .time-marker {
+            position: absolute;
+            width: 2px;
+            background-color: rgba(139, 92, 246, 0.8);
+            top: 0;
+            bottom: 0;
+            display: none;
+            pointer-events: none;
+            z-index: 11;
+        }
+
+        .hover-info {
+            position: absolute;
+            padding: 6px 10px;
+            background-color: rgba(15, 23, 42, 0.9);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            display: none;
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        /* Fingerprint point styles */
+        .fingerprint-point {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background-color: rgba(255, 64, 64, 0.8);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            transition: all 0.3s ease;
+        }
+
+        .fingerprint-point:hover {
+            transform: translate(-50%, -50%) scale(2);
+            box-shadow: 0 0 10px rgba(255, 64, 64, 0.8);
+            z-index: 6;
+        }
+
+        .fingerprint-line {
+            position: absolute;
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.2);
+            transform-origin: 0 0;
+            z-index: 4;
+        }
+
+        /* Analysis panel styles */
+        .analysis-panel {
+            border-radius: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .analysis-panel:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Step indicator */
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+
+        .step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: rgba(139, 92, 246, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            background-color: rgb(139, 92, 246);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+        }
+
+        .step.completed {
+            background-color: rgb(20, 184, 166);
+            color: white;
+        }
+
+        /* Heartbeat animation */
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .heartbeat {
+            animation: heartbeat 1.5s ease infinite;
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(15, 23, 42, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(139, 92, 246, 0.1);
+            border-top-color: rgb(139, 92, 246);
+            animation: spinner 1s linear infinite;
+        }
+
+        @keyframes spinner {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Audio fingerprint visualization */
+        .fingerprint-canvas {
+            width: 100%;
+            height: 300px;
+            background-color: #000;
+            border-radius: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .peak-point {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background-color: rgba(255, 64, 64, 0.8);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        .peak-pair-line {
+            position: absolute;
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.3);
+            transform-origin: 0 0;
+            z-index: 5;
+        }
+
+        /* Modern toggle switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(203, 213, 225, 0.5);
+            transition: 0.4s;
+            border-radius: 22px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: rgb(139, 92, 246);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+
+        /* Special selectors */
+        .custom-select {
+            appearance: none;
+            padding: 0.5rem 2rem 0.5rem 1rem;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgb(139, 92, 246)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1.25em 1.25em;
+        }
+
+        /* Frequency axis */
+        .freq-axis {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 20px;
+            width: 40px;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 5px 0;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .freq-tick {
+            font-size: 9px;
+            color: white;
+            padding-left: 5px;
+        }
+
+        .time-axis {
+            position: absolute;
+            left: 40px;
+            right: 0;
+            bottom: 0;
+            height: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: space-between;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .time-tick {
+            font-size: 9px;
+            color: white;
+            padding-top: 2px;
+            position: relative;
+        }
+
+        /* Spectrum analyzer visualization */
+        .spectrum-container {
+            position: relative;
+            height: 200px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .spectrum-bar {
+            position: absolute;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to top, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff);
+            transition: height 0.05s ease-out;
+        }
+
+        .frequency-label {
+            position: absolute;
+            bottom: 5px;
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            transform: rotate(-90deg);
+            transform-origin: left bottom;
+            pointer-events: none;
+        }
+
+        .level-grid {
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+        }
+
+        .level-label {
+            position: absolute;
+            right: 5px;
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            pointer-events: none;
+        }
+
+        /* Peak detection markers */
+        .peak-marker {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: red;
+            pointer-events: none;
+            z-index: 25;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <!-- Main Header -->
+    <header class="relative overflow-hidden">
+        <div class="absolute inset-0 gradient-bg opacity-90 dark:opacity-70 z-0"></div>
+        <div class="relative container mx-auto px-4 py-8 z-10">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold text-white flex items-center">
+                        <i class="fas fa-fingerprint mr-3"></i>
+                        <span>Acoustic Fingerprint Studio</span>
+                    </h1>
+                    <p class="text-white/80 mt-2 max-w-2xl">
+                        Analyze, visualize, and generate unique acoustic fingerprints from audio files
+                    </p>
+                </div>
+                
+                <div class="flex items-center mt-4 md:mt-0 space-x-2">
+                    <button id="theme-toggle" class="flex items-center justify-center w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white transition duration-200">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:block"></i>
+                    </button>
+                    <button id="info-button" class="flex items-center justify-center w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white transition duration-200">
+                        <i class="fas fa-info"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Step Indicator -->
+    <div class="container mx-auto px-4 mt-8 mb-4">
+        <div class="step-indicator max-w-3xl mx-auto">
+            <div class="step active" id="step-1">1</div>
+            <div class="step" id="step-2">2</div>
+            <div class="step" id="step-3">3</div>
+            <div class="step" id="step-4">4</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        <div class="max-w-6xl mx-auto">
+            <!-- Step 1: Audio Upload -->
+            <section id="audio-upload" class="section-step active">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <span class="inline-flex justify-center items-center w-8 h-8 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300 mr-2">1</span>
+                        Audio Input
+                    </h2>
+                    <p class="text-gray-600 dark:text-gray-400">Upload or record an audio file to analyze</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Upload Card -->
+                    <div class="card-3d bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden lg:col-span-2">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold flex items-center mb-4">
+                                <i class="fas fa-file-audio text-primary-600 dark:text-primary-400 mr-2"></i>
+                                Upload Audio File
+                            </h3>
+                            
+                            <div id="drop-zone" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center transition-all hover:border-primary-500 dark:hover:border-primary-400">
+                                <input type="file" id="audio-input" class="hidden" accept="audio/*">
+                                
+                                <div class="mb-4">
+                                    <i class="fas fa-cloud-upload-alt text-gray-400 dark:text-gray-500 text-4xl"></i>
+                                </div>
+                                
+                                <p class="text-gray-600 dark:text-gray-400 mb-2">Drag and drop your audio file here</p>
+                                <p class="text-gray-500 dark:text-gray-500 text-sm mb-4">Supports MP3, WAV, FLAC, OGG, and more</p>
+                                
+                                <button id="browse-btn" class="inline-flex items-center justify-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                                    <i class="fas fa-folder-open mr-2"></i>
+                                    Browse Files
+                                </button>
+                            </div>
+                            
+                            <div class="flex justify-center my-6">
+                                <div class="audio-waves h-12 flex items-end">
+                                    <div class="audio-wave bg-primary-500 dark:bg-primary-600 h-full"></div>
+                                    <div class="audio-wave bg-primary-500 dark:bg-primary-600 h-full"></div>
+                                    <div class="audio-wave bg-primary-500 dark:bg-primary-600 h-full"></div>
+                                    <div class="audio-wave bg-primary-500 dark:bg-primary-600 h-full"></div>
+                                    <div class="audio-wave bg-primary-500 dark:bg-primary-600 h-full"></div>
+                                    <div class="audio-wave bg-primary-500 dark:bg-primary-600 h-full"></div>
+                                    <div class="audio-wave bg-primary-500 dark:bg-primary-600 h-full"></div>
+                                    <div class="audio-wave bg-primary-500 dark:bg-primary-600 h-full"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Audio Info Card -->
+                    <div class="card-3d bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold flex items-center mb-4">
+                                <i class="fas fa-info-circle text-primary-600 dark:text-primary-400 mr-2"></i>
+                                Audio Information
+                            </h3>
+                            
+                            <div id="audio-info-placeholder" class="flex flex-col items-center justify-center h-48 text-gray-400 dark:text-gray-500">
+                                <i class="fas fa-music text-4xl mb-2"></i>
+                                <p>Upload an audio file to see information</p>
+                            </div>
+                            
+                            <div id="audio-info-content" class="hidden">
+                                <div class="space-y-4">
+                                    <div class="flex justify-between items-center pb-2 border-b border-gray-200 dark:border-gray-700">
+                                        <span class="text-gray-600 dark:text-gray-400">Filename:</span>
+                                        <span id="audio-filename" class="font-medium text-gray-900 dark:text-gray-100"></span>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center pb-2 border-b border-gray-200 dark:border-gray-700">
+                                        <span class="text-gray-600 dark:text-gray-400">Duration:</span>
+                                        <span id="audio-duration" class="font-medium text-gray-900 dark:text-gray-100">00:00</span>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center pb-2 border-b border-gray-200 dark:border-gray-700">
+                                        <span class="text-gray-600 dark:text-gray-400">Sample Rate:</span>
+                                        <span id="audio-sample-rate" class="font-medium text-gray-900 dark:text-gray-100">0 Hz</span>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center pb-2 border-b border-gray-200 dark:border-gray-700">
+                                        <span class="text-gray-600 dark:text-gray-400">Channels:</span>
+                                        <span id="audio-channels" class="font-medium text-gray-900 dark:text-gray-100">0</span>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-600 dark:text-gray-400">File Size:</span>
+                                        <span id="audio-file-size" class="font-medium text-gray-900 dark:text-gray-100">0 KB</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Waveform Display -->
+                <div id="waveform-container" class="mt-6 hidden">
+                    <div class="card-3d bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold flex items-center mb-4">
+                                <i class="fas fa-wave-square text-primary-600 dark:text-primary-400 mr-2"></i>
+                                Waveform
+                            </h3>
+                            
+                            <div id="waveform" class="w-full h-32 bg-gray-100 dark:bg-gray-900 rounded-lg mb-4"></div>
+                            
+                            <div class="flex justify-center space-x-4">
+                                <button id="play-btn" class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-600 hover:bg-primary-700 text-white shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                
+                                <button id="stop-btn" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                                    <i class="fas fa-stop"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Processing Options -->
+                <div id="processing-options" class="mt-6 hidden">
+                    <div class="card-3d bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold flex items-center mb-4">
+                                <i class="fas fa-sliders-h text-primary-600 dark:text-primary-400 mr-2"></i>
+                                Processing Options
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Sample Rate
+                                    </label>
+                                    <select id="sample-rate" class="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-500 custom-select">
+                                        <option value="original">Original Sample Rate</option>
+                                        <option value="44100">44.1 kHz (CD Quality)</option>
+                                        <option value="22050" selected>22.05 kHz (Recommended)</option>
+                                        <option value="16000">16 kHz (Voice Optimized)</option>
+                                        <option value="11025">11.025 kHz (Low Quality)</option>
+                                    </select>
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        Lower sample rates improve processing speed but reduce frequency resolution
+                                    </p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Channel Processing
+                                    </label>
+                                    <select id="channel-mode" class="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-500 custom-select">
+                                        <option value="mono" selected>Mono (Mix Channels)</option>
+                                        <option value="left">Left Channel Only</option>
+                                        <option value="right">Right Channel Only</option>
+                                    </select>
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        Fingerprinting works best with mono audio
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6">
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Normalization
+                                    </label>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="normalize-toggle" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div id="normalize-options">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Target Level: <span id="normalize-level-value">-3</span> dB
+                                    </label>
+                                    <input type="range" id="normalize-level" min="-18" max="0" step="1" value="-3" class="w-full">
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        Normalizing ensures consistent volume levels
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="data-flow mt-8 h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+                                <div class="data-particle"></div>
+                                <div class="data-particle"></div>
+                                <div class="data-particle"></div>
+                                <div class="data-particle"></div>
+                                <div class="data-particle"></div>
+                            </div>
+                            
+                            <div class="mt-8 flex justify-center">
+                                <button id="process-audio-btn" class="inline-flex items-center justify-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg shadow-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                                    <i class="fas fa-cogs mr-2"></i>
+                                    Process Audio & Continue
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 2: Spectral Analysis -->
+            <section id="spectral-analysis" class="section-step hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <span class="inline-flex justify-center items-center w-8 h-8 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300 mr-2">2</span>
+                        Spectral Analysis
+                    </h2>
+                    <p class="text-gray-600 dark:text-gray-400">Analyze frequency content with FFT</p>
+                </div>
+
+                <!-- FFT Options -->
+                <div class="card-3d bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold flex items-center mb-4">
+                            <i class="fas fa-chart-bar text-primary-600 dark:text-primary-400 mr-2"></i>
+                            FFT Configuration
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    FFT Size
+                                </label>
+                                <select id="fft-size" class="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-500 custom-select">
+                                    <option value="512">512 points</option>
+                                    <option value="1024">1024 points</option>
+                                    <option value="2048" selected>2048 points</option>
+                                    <option value="4096">4096 points</option>
+                                    <option value="8192">8192 points</option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Larger FFT size = better frequency resolution
+                                </p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Window Function
+                                </label>
+                                <select id="window-function" class="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-500 custom-select">
+                                    <option value="hann" selected>Hann</option>
+                                    <option value="hamming">Hamming</option>
+                                    <option value="blackman">Blackman</option>
+                                    <option value="rectangular">Rectangular</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Overlap: <span id="overlap-value">50</span>%
+                                </label>
+                                <input type="range" id="overlap" min="0" max="75" step="5" value="50" class="w-full">
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Higher overlap = smoother spectrogram
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div class="flex flex-wrap items-center justify-between">
+                                <div class="text-sm dark:bg-gray-900 bg-gray-100 rounded-lg px-3 py-2 mb-2">
+                                    <span class="text-gray-600 dark:text-gray-400">Time Resolution:</span>
+                                    <span id="time-resolution" class="ml-1 font-medium">46.4 ms</span>
+                                </div>
+                                
+                                <div class="text-sm dark:bg-gray-900 bg-gray-100 rounded-lg px-3 py-2 mb-2">
+                                    <span class="text-gray-600 dark:text-gray-400">Frequency Resolution:</span>
+                                    <span id="freq-resolution" class="ml-1 font-medium">10.8 Hz</span>
+                                </div>
+                                
+                                <div class="text-sm dark:bg-gray-900 bg-gray-100 rounded-lg px-3 py-2 mb-2">
+                                    <span class="text-gray-600 dark:text-gray-400">Frames:</span>
+                                    <span id="frame-count" class="ml-1 font-medium">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 flex justify-center">
+                            <button id="compute-fft-btn" class="inline-flex items-center justify-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg shadow-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                                <i class="fas fa-calculator mr-2"></i>
+                                Compute FFT
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Spectral Visualizations (hidden until computed) -->
+                <div id="spectral-visualizations" class="mt-6 hidden">
+                    <div class="grid grid-cols-1 gap-6">
+                        <!-- Spectrum Analyzer -->
+                        <div class="card-3d bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                            <div class="p-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-lg font-semibold flex items-center">
+                                        <i class="fas fa-wave-square text-primary-600 dark:text-primary-400 mr-2"></i>
+                                        Spectrum Analyzer
+                                    </h3>
+                                    
+                                    <div class="flex items-center space-x-4">
+                                        <button id="play-spectrum-btn" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 hover:bg-primary-700 text-white shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                                            <i class="fas fa-play"></i>
+                                        </button>
+                                        
+                                        <select id="spectrum-scale" class="bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-500 custom-select">
+                                            <option value="linear">Linear</option>
+                                            <option value="logarithmic" selected>Logarithmic (dB)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="spectrum-container" id="spectrum-analyzer">
+                                    <!-- Spectrum bars will be inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Spectrogram Visualization -->
+                        <div class="card-3d bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                            <div class="p-6">
+                                <div class="flex justify-between items-center flex-wrap mb-4">
+                                    <h3 class="text-lg font-semibold flex items-center mb-2 sm:mb-0">
+                                        <i class="fas fa-fire text-primary-600 dark:text-primary-400 mr-2"></i>
+                                        Spectrogram
+                                    </h3>
+                                    
+                                    <div class="flex items-center space-x-4">
+                                        <div>
+                                            <select id="colormap" class="bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-500 custom-select">
+                                                <option value="viridis" selected>Viridis</option>
+                                                <option value="inferno">Inferno</option>
+                                                <option value="plasma">Plasma</option>
+                                                <option value="magma">Magma</option>
+                                                <option value="turbo">Turbo</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="flex items-center space-x-1">
+                                            <span class="text-sm text-gray-600 dark:text-gray-400">Gain:</span>
+                                            <input type="range" id="intensity" min="0" max="100" step="5" value="60" class="w-24">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="spectrogram-container h-72 relative">
+                                    <div id="spectrogram" class="h-full w-full"></div>
+                                    <div class="spectrogram-overlay">
+                                        <div class="spectrogram-cursor" id="spectrogram-cursor"></div>
+                                        <div class="time-marker" id="time-marker"></div>
+                                        <div class="hover-info" id="hover-info"></div>
+                                        <div class="freq-axis" id="freq-axis"></div>
+                                        <div class="time-axis" id="time-axis"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4 flex flex-wrap justify-center space-x-2">
+                                    <button id="play-spectrogram-btn" class="inline-flex items-center justify-center px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white rounded-lg shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 text-sm">
+                                        <i class="fas fa-play mr-1"></i> Play
+                                    </button>
+                                    
+                                    <button id="zoom-in-btn" class="inline-flex items-center justify-center px-3 py-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800 text-sm">
+                                        <i class="fas fa-search-plus mr-1"></i> Zoom In
+                                    </button>
+                                    
+                                    <button id="zoom-out-btn" class="inline-flex items-center justify-center px-3 py-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800 text-sm">
+                                        <i class="fas fa-search-minus mr-1"></i> Zoom Out
+                                    </button>
+                                    
+                                    <button id="reset-view-btn" class="inline-flex items-center justify-center px-3 py-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800 text-sm">
+                                        <i class="fas fa-undo mr-1"></i> Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 flex justify-center">
+                        <button id="continue-to-peak-detection-btn" class="inline-flex items-center justify-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg shadow-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                            <i class="fas fa-forward mr-2"></i>
+                            Continue to Peak Detection
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 3: Peak Detection -->
+            <section id="peak-detection" class="section-step hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <span class="inline-flex justify-center items-center w-8 h-8 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300 mr-2">3</span>
+                        Peak Detection
+                    </h2>
+                    <p class="text-gray-600 dark:text-gray-400">Identify spectral peaks for fingerprinting</p>
+                </div>
+
+                <!-- Peak Detection Parameters -->
+                <div class="card-3d bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold flex items-center mb-4">
+                            <i class="fas fa-mountain text-primary-600 dark:text-primary-400 mr-2"></i>
+                            Peak Detection Parameters
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Threshold: <span id="threshold-value">0.35</span>
+                                </label>
+                                <input type="range" id="threshold" min="0.05" max="0.95" step="0.05" value="0.35" class="w-full">
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Higher threshold = fewer peaks (better quality)
+                                </p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Minimum Peak Distance: <span id="min-distance-value">20</span> bins
+                                </label>
+                                <input type="range" id="min-distance" min="5" max="50" step="5" value="20" class="w-full">
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Minimum separation between detected peaks
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Neighborhood Size: <span id="neighborhood-value">3</span> bins
+                                </label>
+                                <input type="range" id="neighborhood-size" min="1" max="10" step="1" value="3" class="w-full">
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Area to check when finding local maxima
+                                </p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Frequency Weighting
+                                </label>
+                                <select id="frequency-weighting" class="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-500 custom-select">
+                                    <option value="none">Flat</option>
+                                    <option value="a-weighting">A-Weighting (Human Hearing)</option>
+                                    <option value="mid-boost" selected>Mid-Range Boost</option>
+                                    <option value="high-boost">High Frequency Boost</option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Emphasize specific frequency ranges
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 flex justify-center">
+                            <button id="detect-peaks-btn" class="inline-flex items-center justify-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg shadow-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                                <i class="fas fa-mountain mr-2"></i>
+                                Detect Peaks
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Peak Detection Results (hidden until detected) -->
+                <div id="peak-results" class="mt-6 hidden">
+                    <div class="card-3d bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold flex items-center mb-4">
+                                <i class="fas fa-chart-line text-primary-600 dark:text-primary-400 mr-2"></i>
+                                Peak Detection Results
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <div class="text-center bg-gray-100 dark:bg-gray-900 rounded-lg p-4">
+                                    <div class="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Peaks</div>
+                                    <div id="total-peaks" class="text-2xl font-bold text-primary-600 dark:text-primary-400">0</div>
+                                </div>
+                                
+                                <div class="text-center bg-gray-100 dark:bg-gray-900 rounded-lg p-4">
+                                    <div class="text-gray-600 dark:text-gray-400 text-sm mb-1">Peak Density</div>
+                                    <div id="peak-density" class="text-2xl font-bold text-primary-600 dark:text-primary-400">0/sec</div>
+                                </div>
+                                
+                                <div class="text-center bg-gray-100 dark:bg-gray-900 rounded-lg p-4">
+                                    <div class="text-gray-600 dark:text-gray-400 text-sm mb-1">Frequency Range</div>
+                                    <div id="freq-range" class="text-2xl font-bold text-primary-600 dark:text-primary-400">0-0 Hz</div>
+                                </div>
+                            </div>
+                            
+                            <div class="spectrogram-container h-72 relative">
+                                <div id="peak-visualization" class="h-full w-full"></div>
+                                <div class="spectrogram-overlay">
+                                    <div class="hover-info" id="peak-hover-info"></div>
+                                    <div class="freq-axis" id="peak-freq-axis"></div>
+                                    <div class="time-axis" id="peak-time-axis"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-8 flex justify-center">
+                                <button id="continue-to-fingerprint-btn" class="inline-flex items-center justify-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg shadow-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                                    <i class="fas fa-forward mr-2"></i>
+                                    Continue to Fingerprinting
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 4: Fingerprinting -->
+            <section id="fingerprinting" class="section-step hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <span class="inline-flex justify-center items-center w-8 h-8 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300 mr-2">4</span>
+                        Fingerprinting
+                    </h2>
+                    <p class="text-gray-600 dark:text-gray-400">Generate acoustic fingerprints from peak pairs</p>
+                </div>
+
+                <!-- Fingerprint Parameters -->
+                <div class="card-3d bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold flex items-center mb-4">
+                            <i class="fas fa-fingerprint text-primary-600 dark:text-primary-400 mr-2"></i>
+                            Fingerprint Parameters
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Target Zone Time: <span id="target-zone-value">2.0</span> seconds
+                                </label>
+                                <input type="range" id="target-zone" min="0.5" max="5" step="0.5" value="2.0" class="w-full">
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Time window to look for target peaks
+                                </p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Max Time Delta: <span id="max-delta-value">3.0</span> seconds
+                                </label>
+                                <input type="range" id="max-time-delta" min="1" max="10" step="0.5" value="3.0" class="w-full">
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Maximum time difference between peak pairs
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Hash Algorithm
+                            </label>
+                            <select id="hash-algorithm" class="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-500 custom-select">
+                                <option value="simple">Simple (Fast)</option>
+                                <option value="md5" selected>MD5-like (Balanced)</option>
+                                <option value="advanced">Advanced (Robust)</option>
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                Algorithm used to generate hash values from peak pairs
+                            </p>
+                        </div>
+                        
+                        <div class="mt-8 flex justify-center">
+                            <button id="generate-fingerprint-btn" class="inline-flex items-center justify-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg shadow-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                                <i class="fas fa-fingerprint mr-2"></i>
+                                Generate Fingerprint
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fingerprint Results (hidden until generated) -->
+                <div id="fingerprint-results" class="mt-6 hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Constellation Map -->
+                        <div class="card-3d bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                            <div class="p-6">
+                                <h3 class="text-lg font-semibold flex items-center mb-4">
+                                    <i class="fas fa-project-diagram text-primary-600 dark:text-primary-400 mr-2"></i>
+                                    Constellation Map
+                                </h3>
+                                
+                                <div class="fingerprint-canvas" id="constellation-map"></div>
+                                
+                                <div class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                                    <span id="pair-count">0</span> peak pairs identified
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Hash Distribution -->
+                        <div class="card-3d bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                            <div class="p-6">
+                                <h3 class="text-lg font-semibold flex items-center mb-4">
+                                    <i class="fas fa-hashtag text-primary-600 dark:text-primary-400 mr-2"></i>
+                                    Hash Distribution
+                                </h3>
+                                
+                                <div id="hash-distribution" class="h-72"></div>
+                                
+                                <div class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                                    Frequency of hash values (first 8 characters)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Fingerprint Summary -->
+                    <div class="mt-6 card-3d bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold flex items-center mb-4">
+                                <i class="fas fa-clipboard-list text-primary-600 dark:text-primary-400 mr-2"></i>
+                                Fingerprint Summary
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">File Information</h4>
+                                    <ul class="space-y-2 text-sm">
+                                        <li class="flex justify-between">
+                                            <span class="text-gray-600 dark:text-gray-400">Filename:</span>
+                                            <span id="summary-filename" class="font-medium text-gray-900 dark:text-gray-100"></span>
+                                        </li>
+                                        <li class="flex justify-between">
+                                            <span class="text-gray-600 dark:text-gray-400">Duration:</span>
+                                            <span id="summary-duration" class="font-medium text-gray-900 dark:text-gray-100"></span>
+                                        </li>
+                                        <li class="flex justify-between">
+                                            <span class="text-gray-600 dark:text-gray-400">Sample Rate:</span>
+                                            <span id="summary-sample-rate" class="font-medium text-gray-900 dark:text-gray-100"></span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Analysis Settings</h4>
+                                    <ul class="space-y-2 text-sm">
+                                        <li class="flex justify-between">
+                                            <span class="text-gray-600 dark:text-gray-400">FFT Size:</span>
+                                            <span id="summary-fft" class="font-medium text-gray-900 dark:text-gray-100"></span>
+                                        </li>
+                                        <li class="flex justify-between">
+                                            <span class="text-gray-600 dark:text-gray-400">Window:</span>
+                                            <span id="summary-window" class="font-medium text-gray-900 dark:text-gray-100"></span>
+                                        </li>
+                                        <li class="flex justify-between">
+                                            <span class="text-gray-600 dark:text-gray-400">Peak Threshold:</span>
+                                            <span id="summary-threshold" class="font-medium text-gray-900 dark:text-gray-100"></span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fingerprint Results</h4>
+                                    <ul class="space-y-2 text-sm">
+                                        <li class="flex justify-between">
+                                            <span class="text-gray-600 dark:text-gray-400">Total Peaks:</span>
+                                            <span id="summary-peaks" class="font-medium text-gray-900 dark:text-gray-100"></span>
+                                        </li>
+                                        <li class="flex justify-between">
+                                            <span class="text-gray-600 dark:text-gray-400">Hash Pairs:</span>
+                                            <span id="summary-pairs" class="font-medium text-gray-900 dark:text-gray-100"></span>
+                                        </li>
+                                        <li class="flex justify-between">
+                                            <span class="text-gray-600 dark:text-gray-400">Uniqueness:</span>
+                                            <span id="summary-uniqueness" class="font-medium text-gray-900 dark:text-gray-100"></span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <div class="flex flex-wrap justify-between items-center">
+                                    <div class="flex flex-col max-w-sm">
+                                        <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Example Hash</h4>
+                                        <div class="bg-gray-100 dark:bg-gray-900 rounded-lg p-3 font-mono text-xs overflow-x-auto">
+                                            <div id="example-hash-input" class="mb-1 text-gray-600 dark:text-gray-400">(f1=720 Hz, f2=1250 Hz, Δt=0.58s)</div>
+                                            <div id="example-hash-output" class="text-primary-600 dark:text-primary-400">83a92c86f9b5e5ed92341a3875765a69</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-4 md:mt-0">
+                                        <button id="download-fingerprint-btn" class="inline-flex items-center justify-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                                            <i class="fas fa-download mr-2"></i>
+                                            Download Fingerprint
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 flex justify-center">
+                        <button id="restart-btn" class="inline-flex items-center justify-center px-6 py-3 bg-secondary-600 hover:bg-secondary-700 text-white rounded-lg shadow-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                            <i class="fas fa-redo mr-2"></i>
+                            Analyze Another Audio File
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-12 py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h3 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-fingerprint mr-2"></i>
+                        Acoustic Fingerprint Studio
+                    </h3>
+                    <p class="text-gray-400 text-sm mt-1">
+                        An interactive tool for audio signal processing and fingerprinting
+                    </p>
+                </div>
+                
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-white transition duration-200">
+                        <i class="fas fa-headphones-alt mr-1"></i>
+                        <span>About</span>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition duration-200">
+                        <i class="fas fa-book mr-1"></i>
+                        <span>Documentation</span>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition duration-200">
+                        <i class="fas fa-code mr-1"></i>
+                        <span>API</span>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-gray-700 text-center text-gray-400 text-sm">
+                <p>© 2024 Acoustic Fingerprint Studio. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Info Dialog -->
+    <div id="info-dialog" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">About Acoustic Fingerprinting</h3>
+                    <button id="close-info-dialog" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="prose dark:prose-invert max-w-none">
+                    <p>
+                        <strong>Acoustic fingerprinting</strong> is a technique used to identify or locate audio content based on a small digital signature.
+                    </p>
+                    
+                    <p>
+                        The process works in four main steps:
+                    </p>
+                    
+                    <ol>
+                        <li>
+                            <strong>Audio Processing</strong>: Convert the audio to a standardized format for analysis.
+                        </li>
+                        <li>
+                            <strong>Spectral Analysis</strong>: Transform the audio into the frequency domain using Fast Fourier Transform (FFT).
+                        </li>
+                        <li>
+                            <strong>Peak Detection</strong>: Identify the most prominent frequency peaks in the spectrogram.
+                        </li>
+                        <li>
+                            <strong>Fingerprinting</strong>: Generate hash values from pairs of peaks to create a unique fingerprint.
+                        </li>
+                    </ol>
+                    
+                    <p>
+                        This technique is used by applications like Shazam, SoundHound, and content identification systems to quickly recognize audio, even in noisy environments or when the audio is slightly altered.
+                    </p>
+                    
+                    <p>
+                        The fingerprints generated are robust to various modifications such as compression, equalization, or speed changes, making them ideal for audio identification tasks.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-spinner mb-4"></div>
+        <div id="loading-text" class="text-lg text-white mb-2">Processing audio...</div>
+        <div id="loading-progress" class="text-white text-sm">0%</div>
+    </div>
+
+    <!-- Main JavaScript -->
+    <script>
+        // ===========================================
+        // UTILITY FUNCTIONS
+        // ===========================================
+        
+        // Format time in seconds to MM:SS format
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // Format file size in bytes to human-readable format
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Format frequency in Hz to human-readable format
+        function formatFrequency(hz) {
+            if (hz >= 1000) {
+                return (hz / 1000).toFixed(1) + ' kHz';
+            }
+            return Math.round(hz) + ' Hz';
+        }
+        
+        // Generate a random hash for demo purposes
+        function generateRandomHash() {
+            const chars = '0123456789abcdef';
+            let hash = '';
+            for (let i = 0; i < 32; i++) {
+                hash += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return hash;
+        }
+        
+        // Simple hash function for demo
+        function simpleHash(input) {
+            let hash = 0;
+            for (let i = 0; i < input.length; i++) {
+                hash = ((hash << 5) - hash) + input.charCodeAt(i);
+                hash |= 0; // Convert to 32bit integer
+            }
+            
+            // Convert to hex and pad to 8 characters
+            let hexHash = (hash >>> 0).toString(16).padStart(8, '0');
+            
+            // Repeat to make it look like MD5
+            return hexHash.repeat(4).substring(0, 32);
+        }
+        
+        // Find nearest index in a sorted array
+        function findNearestIndex(array, value) {
+            let low = 0;
+            let high = array.length - 1;
+            
+            while (low <= high) {
+                const mid = Math.floor((low + high) / 2);
+                
+                if (array[mid] === value) return mid;
+                
+                if (array[mid] < value) {
+                    low = mid + 1;
+                } else {
+                    high = mid - 1;
+                }
+            }
+            
+            // Return the closest index
+            if (low >= array.length) return array.length - 1;
+            if (high < 0) return 0;
+            
+            return Math.abs(array[low] - value) < Math.abs(array[high] - value) ? low : high;
+        }
+        
+        // Apply window function to signal
+        function applyWindow(signal, windowType) {
+            const N = signal.length;
+            const windowed = new Float32Array(N);
+            
+            for (let n = 0; n < N; n++) {
+                let windowValue;
+                
+                switch (windowType) {
+                    case 'rectangular':
+                        windowValue = 1;
+                        break;
+                        
+                    case 'hann':
+                        windowValue = 0.5 * (1 - Math.cos(2 * Math.PI * n / (N - 1)));
+                        break;
+                        
+                    case 'hamming':
+                        windowValue = 0.54 - 0.46 * Math.cos(2 * Math.PI * n / (N - 1));
+                        break;
+                        
+                    case 'blackman':
+                        windowValue = 0.42 - 0.5 * Math.cos(2 * Math.PI * n / (N - 1)) + 
+                                     0.08 * Math.cos(4 * Math.PI * n / (N - 1));
+                        break;
+                                     
+                    default:
+                        windowValue = 0.5 * (1 - Math.cos(2 * Math.PI * n / (N - 1))); // default to Hann
+                }
+                
+                windowed[n] = signal[n] * windowValue;
+            }
+            
+            return windowed;
+        }
+        
+        // Colormap functions
+        function getColor(value, colormap = 'viridis') {
+            // Clamp value to 0-1
+            value = Math.max(0, Math.min(1, value));
+            
+            let r, g, b;
+            
+            switch (colormap) {
+                case 'viridis':
+                    // Approximate viridis colormap
+                    r = Math.round(255 * (0.267 + 0.277 * value));
+                    g = Math.round(255 * (0.004 + 0.994 * value - value * value));
+                    b = Math.round(255 * (0.329 + 0.4 * Math.pow(1 - value, 2)));
+                    break;
+                    
+                case 'inferno':
+                    // Approximate inferno colormap
+                    r = Math.round(255 * Math.min(1, 0.001 + 3.5 * value));
+                    g = Math.round(255 * Math.min(1, 0.001 + 1.2 * value - 1.4 * value * value));
+                    b = Math.round(255 * Math.min(1, 0.5 * (1 - value) + 0.3 * Math.pow(1 - value, 2)));
+                    break;
+                    
+                case 'plasma':
+                    // Approximate plasma colormap
+                    r = Math.round(255 * Math.min(1, 0.05 + 3 * value - value * value));
+                    g = Math.round(255 * Math.min(1, 0.05 + 0.8 * value - 0.7 * value * value));
+                    b = Math.round(255 * Math.min(1, 0.5 - 0.4 * value + 0.3 * Math.pow(1 - value, 3)));
+                    break;
+                    
+                case 'magma':
+                    // Approximate magma colormap
+                    r = Math.round(255 * Math.min(1, 0.001 + 3.9 * value - 2.7 * value * value));
+                    g = Math.round(255 * Math.min(1, 0.001 + 2 * value - 2.2 * value * value));
+                    b = Math.round(255 * Math.min(1, 0.4 * (1 - value) + 0.3 * Math.pow(1 - value, 2)));
+                    break;
+                    
+                case 'turbo':
+                    // Approximate turbo colormap
+                    r = Math.round(255 * Math.min(1, 1.7 * value - 0.4 * value * value));
+                    g = Math.round(255 * Math.min(1, 0.7 + 2.5 * value - 3.2 * value * value));
+                    b = Math.round(255 * Math.min(1, 1 - 0.8 * value));
+                    break;
+                    
+                default:
+                    // Default to viridis
+                    r = Math.round(255 * (0.267 + 0.277 * value));
+                    g = Math.round(255 * (0.004 + 0.994 * value - value * value));
+                    b = Math.round(255 * (0.329 + 0.4 * Math.pow(1 - value, 2)));
+            }
+            
+            // Ensure valid RGB values
+            r = Math.max(0, Math.min(255, r));
+            g = Math.max(0, Math.min(255, g));
+            b = Math.max(0, Math.min(255, b));
+            
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+        
+        // Show loading overlay
+        function showLoading(message = 'Processing...', progress = 0) {
+            const overlay = document.getElementById('loading-overlay');
+            const text = document.getElementById('loading-text');
+            const progressText = document.getElementById('loading-progress');
+            
+            text.textContent = message;
+            progressText.textContent = `${Math.round(progress)}%`;
+            overlay.classList.remove('hidden');
+        }
+        
+        // Update loading progress
+        function updateLoadingProgress(progress) {
+            const progressText = document.getElementById('loading-progress');
+            progressText.textContent = `${Math.round(progress)}%`;
+        }
+        
+        // Hide loading overlay
+        function hideLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.classList.add('hidden');
+        }
+        
+        // ===========================================
+        // STATE MANAGEMENT
+        // ===========================================
+        
+        // Global application state
+        const appState = {
+            // Audio
+            audioContext: null,
+            audioFile: null,
+            audioBuffer: null,
+            processedBuffer: null,
+            originalSampleRate: 0,
+            wavesurfer: null,
+            
+            // Processing options
+            sampleRate: 22050,
+            channelMode: 'mono',
+            normalize: true,
+            normalizeLevel: -3,
+            
+            // FFT parameters
+            fftSize: 2048,
+            windowFunction: 'hann',
+            overlap: 0.5,
+            
+            // Spectrogram data
+            spectrogramData: null,
+            
+            // Peak detection
+            peakThreshold: 0.35,
+            minDistance: 20,
+            neighborhoodSize: 3,
+            frequencyWeighting: 'mid-boost',
+            detectedPeaks: [],
+            
+            // Fingerprint parameters
+            targetZoneTime: 2,
+            maxTimeDelta: 3,
+            hashAlgorithm: 'md5',
+            fingerprintHashes: [],
+            
+            // Playback state
+            isPlaying: false,
+            
+            // Visualizations
+            spectrogramInstance: null,
+            spectrumAnalyzer: null,
+            
+            // Reset the state for a new analysis
+            reset() {
+                // Keep audio context but clear everything else
+                this.audioFile = null;
+                this.audioBuffer = null;
+                this.processedBuffer = null;
+                this.originalSampleRate = 0;
+                
+                if (this.wavesurfer) {
+                    this.wavesurfer.destroy();
+                    this.wavesurfer = null;
+                }
+                
+                this.spectrogramData = null;
+                this.detectedPeaks = [];
+                this.fingerprintHashes = [];
+                
+                if (this.spectrogramInstance) {
+                    // Clean up spectrogram instance
+                    this.spectrogramInstance = null;
+                }
+                
+                if (this.spectrumAnalyzer) {
+                    // Clean up spectrum analyzer
+                    this.spectrumAnalyzer = null;
+                }
+                
+                // Return to step 1
+                showStep(1);
+            }
+        };
+        
+        // ===========================================
+        // UI NAVIGATION
+        // ===========================================
+        
+        // Show a specific step and update the step indicator
+        function showStep(stepNumber) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.section-step');
+            sections.forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show the requested section
+            let sectionToShow;
+            switch (stepNumber) {
+                case 1:
+                    sectionToShow = document.getElementById('audio-upload');
+                    break;
+                case 2:
+                    sectionToShow = document.getElementById('spectral-analysis');
+                    break;
+                case 3:
+                    sectionToShow = document.getElementById('peak-detection');
+                    break;
+                case 4:
+                    sectionToShow = document.getElementById('fingerprinting');
+                    break;
+                default:
+                    sectionToShow = document.getElementById('audio-upload');
+            }
+            
+            sectionToShow.classList.remove('hidden');
+            
+            // Update step indicators
+            const steps = document.querySelectorAll('.step');
+            steps.forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                
+                if (index + 1 < stepNumber) {
+                    step.classList.add('completed');
+                } else if (index + 1 === stepNumber) {
+                    step.classList.add('active');
+                }
+            });
+        }
+        
+        // ===========================================
+        // AUDIO PROCESSING
+        // ===========================================
+        
+        // Initialize the audio context (on user interaction)
+        function initAudioContext() {
+            if (!appState.audioContext) {
+                appState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } else if (appState.audioContext.state === 'suspended') {
+                appState.audioContext.resume();
+            }
+        }
+        
+        // Handle the uploaded audio file
+        function handleAudioFile(file) {
+            if (!file.type.startsWith('audio/')) {
+                alert('Please upload an audio file.');
+                return;
+            }
+            
+            appState.audioFile = file;
+            
+            // Show loading overlay
+            showLoading('Loading audio file...', 0);
+            
+            // Initialize audio context
+            initAudioContext();
+            
+            // Read the file
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                // Decode the audio data
+                appState.audioContext.decodeAudioData(e.target.result)
+                    .then(function(buffer) {
+                        appState.audioBuffer = buffer;
+                        appState.originalSampleRate = buffer.sampleRate;
+                        
+                        // Update UI with audio info
+                        updateAudioInfo(buffer, file);
+                        
+                        // Initialize the waveform visualization
+                        initWaveform(buffer);
+                        
+                        // Show relevant UI elements
+                        document.getElementById('audio-info-placeholder').classList.add('hidden');
+                        document.getElementById('audio-info-content').classList.remove('hidden');
+                        document.getElementById('waveform-container').classList.remove('hidden');
+                        document.getElementById('processing-options').classList.remove('hidden');
+                        
+                        // Update processing options
+                        updateProcessingOptions();
+                        
+                        // Hide loading overlay
+                        hideLoading();
+                    })
+                    .catch(function(error) {
+                        console.error('Error decoding audio data:', error);
+                        hideLoading();
+                        alert('Error decoding audio file. Please try another file.');
+                    });
+            };
+            
+            reader.onerror = function() {
+                hideLoading();
+                alert('Error reading file.');
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        // Update audio information display
+        function updateAudioInfo(buffer, file) {
+            // Update filename
+            document.getElementById('audio-filename').textContent = file.name;
+            
+            // Format duration
+            const duration = buffer.duration;
+            document.getElementById('audio-duration').textContent = formatTime(duration);
+            
+            // Update sample rate and channels
+            document.getElementById('audio-sample-rate').textContent = `${buffer.sampleRate} Hz`;
+            document.getElementById('audio-channels').textContent = buffer.numberOfChannels;
+            
+            // Update file size
+            document.getElementById('audio-file-size').textContent = formatFileSize(file.size);
+        }
+        
+        // Initialize waveform visualization
+        function initWaveform(buffer) {
+            if (appState.wavesurfer) {
+                appState.wavesurfer.destroy();
+            }
+            
+            // Initialize WaveSurfer
+            appState.wavesurfer = WaveSurfer.create({
+                container: '#waveform',
+                height: 128,
+                waveColor: 'rgba(139, 92, 246, 0.3)',
+                progressColor: 'rgba(139, 92, 246, 0.8)',
+                cursorColor: 'rgba(139, 92, 246, 0.8)',
+                cursorWidth: 2,
+                barWidth: 2,
+                barGap: 1,
+                barRadius: 2,
+                normalize: true
+            });
+            
+            // Create a Blob from AudioBuffer for WaveSurfer v7
+            const numberOfChannels = buffer.numberOfChannels;
+            const length = buffer.length;
+            const sampleRate = buffer.sampleRate;
+            const audioData = new Float32Array(length * numberOfChannels);
+            
+            // Mix all channels into a single array
+            for (let channel = 0; channel < numberOfChannels; channel++) {
+                const channelData = buffer.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    audioData[i * numberOfChannels + channel] = channelData[i];
+                }
+            }
+            
+            // Set buffer directly to WaveSurfer v7
+            appState.wavesurfer.loadDecodedBuffer(audioData, numberOfChannels, sampleRate);
+            
+            // Set up play button event
+            document.getElementById('play-btn').addEventListener('click', function() {
+                appState.wavesurfer.playPause();
+                
+                if (appState.wavesurfer.isPlaying()) {
+                    this.innerHTML = '<i class="fas fa-pause"></i>';
+                } else {
+                    this.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            });
+            
+            // Set up stop button event
+            document.getElementById('stop-btn').addEventListener('click', function() {
+                appState.wavesurfer.stop();
+                document.getElementById('play-btn').innerHTML = '<i class="fas fa-play"></i>';
+            });
+            
+            // Update button when playback ends
+            appState.wavesurfer.on('finish', function() {
+                document.getElementById('play-btn').innerHTML = '<i class="fas fa-play"></i>';
+            });
+        }
+        
+        // Update processing options when changed
+        function updateProcessingOptions() {
+            // Sample rate option
+            document.getElementById('sample-rate').addEventListener('change', function() {
+                const value = this.value;
+                appState.sampleRate = value === 'original' ? appState.originalSampleRate : parseInt(value);
+            });
+            
+            // Channel mode option
+            document.getElementById('channel-mode').addEventListener('change', function() {
+                appState.channelMode = this.value;
+            });
+            
+            // Normalization toggle
+            document.getElementById('normalize-toggle').addEventListener('change', function() {
+                appState.normalize = this.checked;
+                
+                // Show/hide normalize options
+                const normalizeOptions = document.getElementById('normalize-options');
+                normalizeOptions.style.display = this.checked ? 'block' : 'none';
+            });
+            
+            // Normalize level slider
+            document.getElementById('normalize-level').addEventListener('input', function() {
+                appState.normalizeLevel = parseInt(this.value);
+                document.getElementById('normalize-level-value').textContent = this.value;
+            });
+        }
+        
+        // Process audio with the selected options
+        async function processAudio() {
+            if (!appState.audioBuffer) {
+                alert('Please upload an audio file first.');
+                return false;
+            }
+            
+            try {
+                showLoading('Processing audio...', 5);
+                
+                // Get processing parameters
+                const targetSampleRate = appState.sampleRate;
+                const channelMode = appState.channelMode;
+                const normalize = appState.normalize;
+                const normalizeLevel = appState.normalizeLevel;
+                
+                updateLoadingProgress(10);
+                
+                // Create mono buffer based on channel mode
+                const monoBuffer = await createMonoBuffer(appState.audioBuffer, channelMode, targetSampleRate);
+                
+                updateLoadingProgress(50);
+                
+                // Apply normalization if enabled
+                let processedBuffer;
+                if (normalize) {
+                    processedBuffer = await normalizeBuffer(monoBuffer, normalizeLevel);
+                } else {
+                    processedBuffer = monoBuffer;
+                }
+                
+                updateLoadingProgress(90);
+                
+                // Store processed buffer
+                appState.processedBuffer = processedBuffer;
+                
+                updateLoadingProgress(100);
+                
+                return true;
+            } catch (error) {
+                console.error('Audio processing error:', error);
+                hideLoading();
+                alert('Error processing audio: ' + error.message);
+                return false;
+            }
+        }
+        
+        // Create mono buffer from multi-channel audio
+        async function createMonoBuffer(sourceBuffer, channelMode, targetSampleRate) {
+            return new Promise((resolve, reject) => {
+                try {
+                    // Create temporary offline context for resampling if needed
+                    const tempCtx = new OfflineAudioContext({
+                        numberOfChannels: 1,
+                        length: Math.ceil(sourceBuffer.duration * targetSampleRate),
+                        sampleRate: targetSampleRate
+                    });
+                    
+                    // Extract channel data based on mode
+                    let channelData;
+                    switch (channelMode) {
+                        case 'mono':
+                            // Mix all channels
+                            channelData = mixToMono(sourceBuffer);
+                            break;
+                        case 'left':
+                            // Use left channel only
+                            channelData = sourceBuffer.getChannelData(0);
+                            break;
+                        case 'right':
+                            // Use right channel if available, otherwise left
+                            channelData = sourceBuffer.numberOfChannels > 1 ? 
+                                sourceBuffer.getChannelData(1) : sourceBuffer.getChannelData(0);
+                            break;
+                        default:
+                            // Default to mono mix
+                            channelData = mixToMono(sourceBuffer);
+                    }
+                    
+                    // Create a temporary buffer with the selected channel
+                    const tempBuffer = tempCtx.createBuffer(1, channelData.length, sourceBuffer.sampleRate);
+                    tempBuffer.getChannelData(0).set(channelData);
+                    
+                    // Create a source node
+                    const source = tempCtx.createBufferSource();
+                    source.buffer = tempBuffer;
+                    source.connect(tempCtx.destination);
+                    
+                    // Start rendering (this handles resampling)
+                    source.start();
+                    tempCtx.startRendering().then(resolve).catch(reject);
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }
+        
+        // Mix all channels to mono
+        function mixToMono(buffer) {
+            const numChannels = buffer.numberOfChannels;
+            const length = buffer.length;
+            const monoData = new Float32Array(length);
+            
+            // Mix all channels with equal weight
+            for (let i = 0; i < numChannels; i++) {
+                const channelData = buffer.getChannelData(i);
+                for (let j = 0; j < length; j++) {
+                    monoData[j] += channelData[j] / numChannels;
+                }
+            }
+            
+            return monoData;
+        }
+        
+        // Normalize audio buffer to target level
+        async function normalizeBuffer(buffer, targetLevelDB) {
+            return new Promise((resolve, reject) => {
+                try {
+                    // Create a new offline context
+                    const normCtx = new OfflineAudioContext({
+                        numberOfChannels: buffer.numberOfChannels,
+                        length: buffer.length,
+                        sampleRate: buffer.sampleRate
+                    });
+                    
+                    // Calculate peak amplitude
+                    const channelData = buffer.getChannelData(0);
+                    let peak = 0;
+                    for (let i = 0; i < channelData.length; i++) {
+                        const abs = Math.abs(channelData[i]);
+                        if (abs > peak) peak = abs;
+                    }
+                    
+                    // Calculate gain for normalization
+                    const targetPeak = Math.pow(10, targetLevelDB / 20); // Convert dB to linear
+                    const gain = peak > 0 ? targetPeak / peak : 1;
+                    
+                    // Create source and gain nodes
+                    const source = normCtx.createBufferSource();
+                    source.buffer = buffer;
+                    
+                    const gainNode = normCtx.createGain();
+                    gainNode.gain.value = gain;
+                    
+                    source.connect(gainNode);
+                    gainNode.connect(normCtx.destination);
+                    
+                    // Start rendering
+                    source.start();
+                    normCtx.startRendering().then(resolve).catch(reject);
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }
+        
+        // Initialize the application
+        function initApp() {
+            // Theme toggle
+            document.getElementById('theme-toggle').addEventListener('click', function() {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                } else {
+                    document.documentElement.classList.add('dark');
+                }
+            });
+            
+            // Check system preference for dark mode
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+            
+            // Info dialog
+            document.getElementById('info-button').addEventListener('click', function() {
+                document.getElementById('info-dialog').classList.remove('hidden');
+            });
+            
+            document.getElementById('close-info-dialog').addEventListener('click', function() {
+                document.getElementById('info-dialog').classList.add('hidden');
+            });
+            
+            // File upload handlers
+            const dropZone = document.getElementById('drop-zone');
+            const browseBtn = document.getElementById('browse-btn');
+            const audioInput = document.getElementById('audio-input');
+            
+            browseBtn.addEventListener('click', function() {
+                audioInput.click();
+            });
+            
+            audioInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    handleAudioFile(this.files[0]);
+                }
+            });
+            
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('border-primary-500', 'dark:border-primary-400');
+            });
+            
+            dropZone.addEventListener('dragleave', function() {
+                this.classList.remove('border-primary-500', 'dark:border-primary-400');
+            });
+            
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('border-primary-500', 'dark:border-primary-400');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    handleAudioFile(e.dataTransfer.files[0]);
+                }
+            });
+            
+            // Process Audio button
+            document.getElementById('process-audio-btn').addEventListener('click', async function() {
+                this.disabled = true;
+                
+                const success = await processAudio();
+                
+                if (success) {
+                    showStep(2);
+                    
+                    // Update FFT parameters based on processed audio
+                    updateFFTParameters();
+                }
+                
+                this.disabled = false;
+            });
+            
+            // FFT parameters
+            document.getElementById('fft-size').addEventListener('change', updateFFTParameters);
+            document.getElementById('window-function').addEventListener('change', updateFFTParameters);
+            document.getElementById('overlap').addEventListener('input', function() {
+                document.getElementById('overlap-value').textContent = this.value;
+                updateFFTParameters();
+            });
+            
+            // Update FFT parameters initially
+            updateFFTParameters();
+        }
+        
+        // Update FFT parameters based on inputs
+        function updateFFTParameters() {
+            const fftSize = parseInt(document.getElementById('fft-size').value);
+            const overlap = parseInt(document.getElementById('overlap').value) / 100;
+            
+            // Calculate time and frequency resolution
+            if (appState.processedBuffer) {
+                const sampleRate = appState.processedBuffer.sampleRate;
+                
+                // Time resolution
+                const timeResolution = (fftSize / sampleRate) * 1000; // in ms
+                document.getElementById('time-resolution').textContent = `${timeResolution.toFixed(1)} ms`;
+                
+                // Frequency resolution
+                const freqResolution = sampleRate / fftSize;
+                document.getElementById('freq-resolution').textContent = `${freqResolution.toFixed(1)} Hz`;
+                
+                // Frame count estimate
+                const hopSize = Math.round(fftSize * (1 - overlap));
+                const signalLength = appState.processedBuffer.length;
+                const frameCount = Math.floor((signalLength - fftSize) / hopSize) + 1;
+                document.getElementById('frame-count').textContent = frameCount;
+            }
+        }
+        
+        // Initialize the application when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
