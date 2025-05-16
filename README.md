@@ -3,6 +3,12 @@
 
 Eliprint AudioFingering is a powerful Python library designed for audio fingerprinting and music identification. It leverages advanced signal processing techniques to efficiently store and identify audio tracks based on their unique acoustic characteristics.
 
+
+<p align="center">
+  <img src="https://github.com/abelyo252/AKeyword_Spotting/blob/main/image/keyword_spotter_logo.png">
+</p>
+
+
 ## Table of Contents
 
 - [Features](#features)
