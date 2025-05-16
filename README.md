@@ -1,14 +1,11 @@
 
-# Eliprint AudioFingering
+# Eliprint Audio Fingerprinting
 
-Eliprint AudioFingering is a powerful Python library designed for audio fingerprinting and music identification. It leverages advanced signal processing techniques to efficiently store and identify audio tracks based on their unique acoustic characteristics.
-
+Eliprint Audio Fingerprinting is a powerful Python library designed for audio fingerprinting and music identification. It leverages advanced signal processing techniques to efficiently store and identify audio tracks based on their unique acoustic characteristics.
 
 <p align="center">
   <img src="https://github.com/abelyo252/EliPrint/blob/main/documentation/image/Audio_Fingerprint_1.png">
- 
 </p>
-
 
 ## Table of Contents
 
@@ -131,7 +128,7 @@ else:
 
 ## Signal Processing Concepts
 
-Eli Print AudioFingering utilizes several advanced signal processing techniques for robust audio fingerprinting. Below is a detailed mathematical explanation of these concepts.
+Eliprint Audio Fingerprinting utilizes several advanced signal processing techniques for robust audio fingerprinting. Below is a detailed mathematical explanation of these concepts.
 
 ### Fast Fourier Transform (FFT)
 
@@ -143,11 +140,7 @@ The inverse DFT is given by:
 
 $$x[n] = \frac{1}{N} \sum_{k=0}^{N-1} X[k] e^{i \frac{2\pi}{N} kn}, \quad n = 0, 1, \ldots, N-1$$
 
-The FFT reduces computational complexity from $O(N^2)$ to $O(N \log N)$ through divide-and-conquer techniques like the Cooley-Tukey algorithm:
-
-$$X[k] = \sum_{m=0}^{N/2-1} x[2m] e^{-i \frac{2\pi}{N/2} mk} + e^{-i \frac{2\pi}{N} k} \sum_{m=0}^{N/2-1} x[2m+1] e^{-i \frac{2\pi}{N/2} mk}$$
-
-This transformation allows for the analysis of the signal's frequency content, enabling the identification of distinct audio features.
+The FFT reduces computational complexity from $O(N^2)$ to $O(N \log N)$ through divide-and-conquer techniques like the Cooley-Tukey algorithm.
 
 ### Spectrogram
 
@@ -163,8 +156,6 @@ The power spectrogram in decibels is often used for visualization:
 
 $$S_{dB}[m, k] = 10 \log_{10}(S[m, k])$$
 
-Spectrograms are crucial for identifying patterns and features within audio data, allowing for the detection of musical notes, rhythms, and distinctive auditory events.
-
 ### Peak Detection
 
 Peak detection identifies local maxima in the spectrogram that serve as robust reference points. A spectral peak at position $(m, k)$ satisfies:
@@ -178,12 +169,6 @@ In practice, adaptive thresholding is often used, where a point is a peak if:
 $$S[m, k] > \mu_{local} + \alpha \cdot \sigma_{local}$$
 
 where $\mu_{local}$ and $\sigma_{local}$ are the local mean and standard deviation in a neighborhood, and $\alpha$ is a sensitivity parameter (typically 3-5).
-
-Morphological operations for noise-robust peak detection can be formulated as:
-
-$$P = (S \ominus B_1) \cap (S \ominus B_2) \cap \ldots \cap (S \ominus B_n)$$
-
-where $\ominus$ is the erosion operation and $B_i$ are structuring elements designed to detect peaks of different shapes.
 
 ### Constellation Map
 
@@ -201,7 +186,7 @@ where $\text{rank}_k$ returns the $k$-th highest value in the neighborhood $N(t_
 
 ### Fingerprint Hashing
 
-The fingerprint hashing process converts pairs of peaks from the constellation map into compact, robust hashes. Similar to Shazam's approach, for each anchor point $(t_a, f_a)$, a set of target points $(t_i, f_i)$ within a time window are selected:
+The fingerprint hashing process converts pairs of peaks from the constellation map into compact, robust hashes. For each anchor point $(t_a, f_a)$, a set of target points $(t_i, f_i)$ within a time window are selected:
 
 $$T(t_a) = \{(t_i, f_i) \in C \mid t_a < t_i \leq t_a + \Delta t_{max}\}$$
 
@@ -218,8 +203,6 @@ where $\ll$ represents the bit shift operation and $|$ is the bitwise OR.
 The complete fingerprint consists of the hash and the absolute time of the anchor point:
 
 $$F = \{(h_1, t_{a1}), (h_2, t_{a2}), \ldots, (h_n, t_{an})\}$$
-
-This approach creates a sparse and efficient representation that is robust to noise, time scaling, and pitch shifting.
 
 ### Matching Algorithm
 
@@ -242,8 +225,6 @@ $$match = \arg\max_s \max_{\delta_t} H_s(\delta_t)$$
 The confidence score can be calculated as:
 
 $$confidence(s) = \frac{\max_{\delta_t} H_s(\delta_t)}{\sum_i H_s(\delta_{t_i})} \cdot \frac{|matches(s)|}{|query\_hashes|}$$
-
-where $|matches(s)|$ is the number of matching hashes for song $s$ and $|query\_hashes|$ is the total number of hashes in the query.
 
 ### Time-Frequency Analysis
 
@@ -273,7 +254,7 @@ The Discrete Wavelet Transform (DWT) uses dyadic scales and positions:
 
 $$DWT_x(j, k) = \frac{1}{\sqrt{2^j}} \int_{-\infty}^{\infty} x(t) \psi^*\left(\frac{t-2^j k}{2^j}\right) dt$$
 
-Wavelet transforms provide multi-resolution analysis that adapts to the signal's local characteristics, making them suitable for analyzing non-stationary audio signals.
+Wavelet transforms provide multi-resolution analysis that adapts to the signal's local characteristics.
 
 ### Cross-Correlation
 
@@ -316,7 +297,7 @@ The MFCCs are computed as:
 
 $$c[i] = \sum_{m=0}^{M-1} \log(S[m]) \cos\left(\frac{\pi i (m+0.5)}{M}\right), \quad i = 0, 1, \ldots, L-1$$
 
-MFCCs provide a compact representation of the spectral characteristics of audio signals, making them useful for fingerprinting.
+MFCCs provide a compact representation of the spectral characteristics of audio signals.
 
 ### Constant-Q Transform (CQT)
 
@@ -345,7 +326,7 @@ DTW allows for comparison of audio fingerprints with different time scales, maki
 
 ## Library Capabilities
 
-Eli Print AudioFingering implements these mathematical concepts with efficient algorithms to provide:
+Eliprint Audio Fingerprinting implements these mathematical concepts with efficient algorithms to provide:
 
 - **Scalability**: Efficiently manage large music collections with parallel processing and optimized data structures.
 - **Robustness**: Identify songs even with background noise, time stretching, pitch shifting, or partial audio using advanced probabilistic models.
@@ -363,10 +344,10 @@ The library employs a hierarchical matching approach:
 
 | Operation | Formula | Implementation |
 |-----------|---------|----------------|
-| STFT | `X(τ,f) = ∫x(t)w(t-τ)e^{-j2πft}dt` | `SpectrogramTransformer` |
-| Peak Extraction | `S(t,f) > μ + 3σ` | `find_spectral_peaks()` |
-| Hash Generation | `H = (f1‖f2‖Δt) mod 2³²` | `HashAlgebra.generate()` |
-| Matching Score | `P(match) = 1 - ∏(1 - pᵢ)` | `ProbabilityModel.score()` |
+| STFT | X(τ,f) = ∫x(t)w(t-τ)e^(-j2πft)dt | `SpectrogramTransformer` |
+| Peak Extraction | S(t,f) > μ + 3σ | `find_spectral_peaks()` |
+| Hash Generation | H = (f1‖f2‖Δt) mod 2³² | `HashAlgebra.generate()` |
+| Matching Score | P(match) = 1 - ∏(1 - pᵢ) | `ProbabilityModel.score()` |
 
 ### Performance Characteristics
 
@@ -461,4 +442,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgements
 
 - Thanks to the open-source community for providing inspiration and tools to create this library.
-```
