@@ -5,7 +5,8 @@ Eliprint AudioFingering is a powerful Python library designed for audio fingerpr
 
 
 <p align="center">
-  <img src="https://github.com/abelyo252/AKeyword_Spotting/blob/main/image/keyword_spotter_logo.png">
+  <img src="https://github.com/abelyo252/EliPrint/blob/main/documentation/image/Audio_Fingerprint_1.png">
+ 
 </p>
 
 
