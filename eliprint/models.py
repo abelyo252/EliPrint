@@ -25,6 +25,10 @@ class AudioTrack:
     artist: str = ""
     album: str = ""
     duration: float = 0.0
+    lyrics: str = ""
+    history: str = ""
+    youtube_url: str = ""
+    picture_url: str = ""
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -53,6 +57,26 @@ class MatchResult:
         """Get track album."""
         return self.track.album if self.track else ""
     
+    @property
+    def lyrics(self) -> str:
+        """Get track lyrics."""
+        return self.track.lyrics if self.track else ""
+    
+    @property
+    def history(self) -> str:
+        """Get track history."""
+        return self.track.history if self.track else ""
+    
+    @property
+    def youtube_url(self) -> str:
+        """Get track YouTube URL."""
+        return self.track.youtube_url if self.track else ""
+    
+    @property
+    def picture_url(self) -> str:
+        """Get track picture URL."""
+        return self.track.picture_url if self.track else ""
+    
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -60,6 +84,10 @@ class MatchResult:
             "title": self.title,
             "artist": self.artist,
             "album": self.album,
+            "lyrics": self.lyrics,
+            "history": self.history,
+            "youtube_url": self.youtube_url,
+            "picture_url": self.picture_url,
             "confidence": self.confidence,
             "offset_seconds": self.offset_seconds,
             "match_count": self.match_count,
