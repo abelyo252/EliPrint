@@ -1,65 +1,96 @@
-# Basic usage
-from eliprint import EliPrint, setup_logging
+from eliprint import EliPrint
 
-# Set up logging
-setup_logging(log_file="eliprint.log")
+# Initialize with SQLite (default if MariaDB is not available)
+recognizer = EliPrint(db_name="Eliprint")
 
-# Initialize EliPrint with MariaDB connection
-eli = EliPrint(
-    host="localhost",
-    port=3306,
-    user="root",
-    password="your_password",
-    database="eliprint"
+# Add a song with extended metadata
+recognizer.add_song(
+    "songs/Tsehaytu Beraki - Bezay በዛይ.mp3",
+    metadata={
+        "title": "ዕምበባ | Embeba",
+        "artist": "ሰለሞን ሃይለ | Solomon Haile",
+        "album": " Embeba - Solomon Haile - Tigrigna Music",
+        "lyrics": """አባ ሻውል ዝባን ጨርሒ ተወሊዓ ወርሒ
+                    አባ ሻውል ጋር ከጨርሒ ጀርባ ጨረቃ በርታለች
+
+                    ካብ ሰዓት ሸሞንተ ዕስራ ጎደል ተጸበኒ በል
+                    ስምንት ሰዓት ከሀያ ጉዳይ ሲል ጀምረክ ጠብቀኝ
+
+                    ወይዘሮ ሃና ኣደ ጽጌና ወዮ ትህባና ሃባና ዶንጊኸናና
+                    ወይዘሮ ሃና÷ የጽጌ እናት ሊሰጡን ያሰቡትን ይስጡን አያቆዩን
+
+                    ባዛይ ከመዓልካ ÷ ከመዓልካ ትብሉኒ እንታይ ክትደግሙኒ?
+                    ባዛይ እንዴት ዋልክ ÷ እንዴት ዋልክ የምትሉኝ ድጋሜ ምን ልታደርጉኝ
+
+                    ሰበይቲ ኣቦይ ዓቢዳ÷ ወርቂ ኽዳና ኣንዲዳ
+                    የእንጀራ እናቴ አበደች÷ የወርቅ ልብሷም አቃጠለች
+
+                    መን ኣንደዶ እንተበለት ባዘይ ባዘይ ፍልይ ኢልካ መሓዛይ
+                    ማን አቃጠለው ስትል ባዘይ ባዘይ ለየት አልክ ጓዴ
+
+                    አባ ሻውል ዝባን ጨርሒ ተወሊዓ ወርሒ
+                    አባ ሻውል ጋር ከጨርሒ ጀርባ ጨረቃ በርታለች
+
+                    ካብ ሰዓት ሸሞንተ ዕስራ ጎደል ተጸበኒ በል
+                    ስምንት ሰዓት ከሀያ ጉዳይ ሲል ጀምረክ ጠብቀኝ
+
+                    ወይኖየ ወይኖየ ወይኖ
+                    የቀይ ዳማይ የቀይ ዳማየ
+
+                    ድሕሪ ገዛይ የኳድድ ኣሎ
+                    ከቤቴ ጀርባ እየጨፈረ ሄድ መለስ እያለ ነው
+
+                    ሚኪኤለይ በዓል ዱር በረኻ
+                    ሚካኤል ባለ ዱር በረሃ
+
+                    ሓልወኒ ኣብ ዘለኻ ኣሊኻ
+                    ጠብቀኝ የትም ብትሆን
+
+                    ንሰብ እኳ ትብሎ ሓደራኻ
+                    ለሰው እንኳን አደራ ይሰጣል አይደለም ላንተ
+
+                    ሸላ ኣሎ ቆሊባ ኣሎ ክንድዚ ኩርሚዳ ኣሎ
+                    ንስር አለ ÷ ነጣቂ አለ ÷ በፍጥነት የሚይዝ ሌባ አለ
+
+                    ሓሪስካ ምብላዕ እኮ ኣሎ
+                    አርሶ መብላትም አለ
+
+                    አባ ሻውል ዝባን ጨርሒ ተወሊዓ ወርሒ
+                    አባ ሻውል ጋር ከጨርሒ ጀርባ ጨረቃ በርታለች
+
+                    ካብ ሰዓት ሸሞንተ ዕስራ ጎደል ተጸበኒ በል
+                    ስምንት ሰዓት ከሀያ ጉዳይ ሲል ጀምረክ ጠብቀኝ
+
+                    ወይዘሮ ሃና ኣደ ጽጌና ወዮ ትህባና ሃባና ዶንጊኸናና
+                    ወይዘሮ ሃና÷ የጽጌ እናት ሊሰጡን ያሰቡትን ይስጡን አያቆዩን""",
+        "history": """አባሸውል (ኤርትራ) ሠፈር ውስጥ አደይ ጸሃይቱ የማታ ስራ እየሰራች ባዘይን ትወደው ነበረ። 
+                    ስትወደው በድብቅ ነው ባዛይ ሴተኛ አዳሪ እንደሆነች አያውቅም እናም እሱን ለማግኘት መሸት ያለ ሠዓት ትመርጣለች ሠው 
+                    እንዳያያትና ለሡ ሥራዋን እንዳይነግሩት ትፈራ ነበር። አደይ ወይዘሮ ሀናን በግዜ ራትዋን ሰጥው እንዲሸኞት ተጠየቃለች ! 
+                    በዛይ እንጀራ እናቱ አፍቅራው ብዙ ወርቅ አፍሳሰለታለች የሰፈሩ ሴት ሁሉ ባዛይ በዛይ ይለዋል።
+
+                    አደይ ፀኻይቱ እና ባዘይ🥰""",
+        "youtube_url": "https://www.youtube.com/watch?v=JGwWNGJdvx8",
+        "picture_url": ""
+    }
 )
 
-# Add a song to the database
-track = eli.add_song("path/to/song.mp3")
-print(f"Added: {track.artist} - {track.title}")
+print("Your Song is recorded !")
 
-# Add an entire directory of songs
-tracks = eli.batch_add_songs("path/to/music/directory")
-print(f"Added {len(tracks)} tracks")
+recognizer.close()
+
+
+from eliprint import EliPrint
+
+# Initialize with SQLite (default if MariaDB is not available)
+recognizer = EliPrint(db_name="Eliprint")
+
 
 # Identify a song
-result = eli.identify_song("path/to/sample.mp3")
+result = recognizer.identify_song("songs/test/test1.mp3")
+
 if result:
-    print(f"Match found: {result.artist} - {result.title}")
-    print(f"Confidence: {result.confidence:.2%}")
-    print(f"Time offset: {result.offset_seconds:.2f} seconds")
+    print("Result : " , result)
 else:
-    print("No match found")
+    print("Song not recognized")
 
-# Get database statistics
-stats = eli.get_stats()
-print(f"Database contains {stats['tracks']} tracks with {stats['fingerprints']} fingerprints")
 
-# Clean up
-eli.close()
-
-# Benchmark usage
-from eliprint import run_analysis, DatasetManager
-
-# Create a test dataset
-dataset_manager = DatasetManager("./datasets")
-dataset_manager.create_dataset(
-    name="test_dataset",
-    source_dir="path/to/audio/files",
-    split_ratio=0.8
-)
-
-# Run benchmark analysis
-results = run_analysis(
-    dataset="test_dataset",
-    conditions=["clean", "noisy(-10dB)", "clip(30%)"],
-    plot=True,
-    plot_title="EliPrint Benchmark Results",
-    plot_path="benchmark_results.png"
-)
-
-# Expected output:
-# | Condition   | Precision | Recall | Songs/Min |
-# |-------------|-----------|--------|-----------|
-# | Clean       | 0.992     | 0.988  | 42        |
-# | Noisy(-10dB)| 0.963     | 0.951  | 38        |
-# | Clip(30%)   | 0.942     | 0.930  | 35        |
