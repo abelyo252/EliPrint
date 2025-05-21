@@ -15,15 +15,29 @@ class EliPrint:
     """Main API for EliPrint audio fingerprinting operations."""
     
     def __init__(self, db_host="localhost", db_port=3306, db_user="root", 
-                 db_password="", db_name="eliprint"):
-        """Initialize with database connection parameters."""
+                 db_password="", db_name="eliprint", db_type=None, 
+                 sqlite_path=None):
+        """
+        Initialize with database connection parameters.
+        
+        Args:
+            db_host: Database host for MariaDB
+            db_port: Database port for MariaDB
+            db_user: Database username for MariaDB
+            db_password: Database password for MariaDB
+            db_name: Database name
+            db_type: Database type ('mariadb' or 'sqlite'), auto-detected if None
+            sqlite_path: Path to SQLite database file, defaults to [db_name].db in current directory
+        """
         self.fingerprinter = Fingerprinter()
         self.database = Database(
             host=db_host,
             port=db_port,
             user=db_user,
             password=db_password,
-            database=db_name
+            database=db_name,
+            db_type=db_type,
+            sqlite_path=sqlite_path
         )
     
     def add_song(self, audio_file: str, metadata: Optional[Dict[str, Any]] = None) -> AudioTrack:
@@ -32,33 +46,57 @@ class EliPrint:
         
         Args:
             audio_file: Path to audio file
-            metadata: Optional metadata (artist, title, etc.)
-            
+            metadata: Optional metadata including:
+                - artist: Artist name
+                - title: Song title
+                - album: Album name
+                - lyrics: Song lyrics
+                - history: Song history/background information
+                - youtube_url: URL to YouTube video
+                - picture_url: URL to album art or artist image
+                
         Returns:
             AudioTrack that was added
         """
-        # Extract track info from filename if not provided
+        # Initialize metadata dict if not provided
         if metadata is None:
             metadata = {}
             
-        # Try to extract artist and title from filename
-        if 'title' not in metadata:
+        # Try to extract artist and title from filename if not provided
+        if 'title' not in metadata or 'artist' not in metadata:
             filename = Path(audio_file).stem
             parts = filename.split(' - ', 1)
             
-            if len(parts) > 1:
+            if len(parts) > 1 and 'artist' not in metadata:
                 metadata['artist'] = parts[0]
-                metadata['title'] = parts[1]
-            else:
-                metadata['title'] = filename
+                
+            if 'title' not in metadata:
+                metadata['title'] = parts[1] if len(parts) > 1 else filename
         
-        # Add path to metadata
-        metadata['path'] = audio_file
+        # Extract standard fields from metadata
+        track_info = {
+            'title': metadata.get('title', ''),
+            'artist': metadata.get('artist', ''),
+            'album': metadata.get('album', ''),
+            'lyrics': metadata.get('lyrics', ''),
+            'history': metadata.get('history', ''),
+            'youtube_url': metadata.get('youtube_url', ''),
+            'picture_url': metadata.get('picture_url', ''),
+        }
+        
+        # Store file path and remaining fields in extra_metadata
+        extra_metadata = {k: v for k, v in metadata.items() 
+                          if k not in ['title', 'artist', 'album', 'lyrics', 
+                                      'history', 'youtube_url', 'picture_url']}
+        
+        # Add file path to extra_metadata
+        extra_metadata['file_path'] = audio_file
         
         # Fingerprint file
         track, fingerprints = self.fingerprinter.fingerprint_file(
             file_path=audio_file,
-            track_info=metadata
+            track_info=track_info,
+            extra_metadata=extra_metadata
         )
         
         # Add to database
@@ -166,12 +204,13 @@ class EliPrint:
         
         return result
     
-    def batch_add_songs(self, directory: str) -> List[AudioTrack]:
+    def batch_add_songs(self, directory: str, metadata_fn=None) -> List[AudioTrack]:
         """
         Add multiple songs from a directory.
         
         Args:
             directory: Directory containing audio files
+            metadata_fn: Optional function that takes a file path and returns a metadata dict
             
         Returns:
             List of added AudioTrack objects
@@ -184,13 +223,67 @@ class EliPrint:
             if filename.lower().endswith(audio_extensions):
                 file_path = os.path.join(directory, filename)
                 try:
-                    track = self.add_song(file_path)
+                    # Get metadata if function provided
+                    metadata = None
+                    if metadata_fn is not None:
+                        metadata = metadata_fn(file_path)
+                    
+                    track = self.add_song(file_path, metadata)
                     tracks.append(track)
                     print(f"Added: {track.artist} - {track.title}")
                 except Exception as e:
                     print(f"Error adding {filename}: {e}")
         
         return tracks
+    
+    def update_song_metadata(self, track_id: str, metadata: Dict[str, Any]) -> bool:
+        """
+        Update metadata for an existing song.
+        
+        Args:
+            track_id: Track ID to update
+            metadata: Metadata to update including any of:
+                - artist: Artist name
+                - title: Song title
+                - album: Album name
+                - lyrics: Song lyrics
+                - history: Song history/background information
+                - youtube_url: URL to YouTube video
+                - picture_url: URL to album art or artist image
+                
+        Returns:
+            True if successfully updated, False if track not found
+        """
+        # Get existing track
+        track = self.database.get_track(track_id)
+        if track is None:
+            return False
+            
+        # Update fields if present in metadata
+        if 'title' in metadata:
+            track.title = metadata['title']
+        if 'artist' in metadata:
+            track.artist = metadata['artist']
+        if 'album' in metadata:
+            track.album = metadata['album']
+        if 'lyrics' in metadata:
+            track.lyrics = metadata['lyrics']
+        if 'history' in metadata:
+            track.history = metadata['history']
+        if 'youtube_url' in metadata:
+            track.youtube_url = metadata['youtube_url']
+        if 'picture_url' in metadata:
+            track.picture_url = metadata['picture_url']
+            
+        # Update other metadata
+        for key, value in metadata.items():
+            if key not in ['title', 'artist', 'album', 'lyrics', 'history', 
+                           'youtube_url', 'picture_url']:
+                track.metadata[key] = value
+                
+        # Save to database
+        self.database.add_track(track)
+        return True
     
     def get_stats(self) -> Dict[str, Any]:
         """Get database statistics."""
