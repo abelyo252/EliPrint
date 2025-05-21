@@ -43,13 +43,15 @@ class Fingerprinter:
         # Create audio processor
         self.audio_processor = AudioProcessor(sample_rate=sample_rate)
     
-    def fingerprint_file(self, file_path: str, track_info: Optional[Dict] = None) -> Tuple[AudioTrack, List[Fingerprint]]:
+    def fingerprint_file(self, file_path: str, track_info: Optional[Dict] = None, 
+                        extra_metadata: Optional[Dict] = None) -> Tuple[AudioTrack, List[Fingerprint]]:
         """
         Extract fingerprints from an audio file.
         
         Args:
             file_path: Path to the audio file
             track_info: Optional metadata for the track
+            extra_metadata: Optional additional metadata
             
         Returns:
             Tuple of (AudioTrack, fingerprints)
@@ -65,11 +67,35 @@ class Fingerprinter:
         audio_data, duration = self.audio_processor.load_audio(file_path)
         track_info['duration'] = duration
         
+        # Add extra metadata
+        metadata = extra_metadata or {}
+        
+        # Store file path in metadata instead of directly in track_info
+        if 'path' in track_info:
+            metadata['file_path'] = track_info.pop('path')
+        else:
+            metadata['file_path'] = file_path
+            
+        track_info['metadata'] = metadata
+        
         # Extract fingerprints
         fingerprints = self._extract_fingerprints(audio_data, track_id)
         
-        # Create track object
-        track = AudioTrack(id=track_id, **track_info)
+        # Create track object - only pass valid fields
+        valid_fields = {
+            'id': track_id,
+            'title': track_info.get('title', ''),
+            'artist': track_info.get('artist', ''),
+            'album': track_info.get('album', ''),
+            'duration': track_info.get('duration', 0.0),
+            'lyrics': track_info.get('lyrics', ''),
+            'history': track_info.get('history', ''),
+            'youtube_url': track_info.get('youtube_url', ''),
+            'picture_url': track_info.get('picture_url', ''),
+            'metadata': track_info.get('metadata', {})
+        }
+        
+        track = AudioTrack(**valid_fields)
         
         return track, fingerprints
     
